@@ -3,10 +3,13 @@ import pathlib
 import os, shutil, subprocess
 
 
-def prepare_data():
+def prepare_data(use_cached=False):
     DOWNLOAD_PATH = './data'
 
-    shutil.rmtree(DOWNLOAD_PATH)
+    if not use_cached:
+        shutil.rmtree(DOWNLOAD_PATH)
+    elif os.path.exists(DOWNLOAD_PATH):
+        return
 
     if not os.path.exists(DOWNLOAD_PATH):
         os.makedirs(DOWNLOAD_PATH)
@@ -33,7 +36,7 @@ def prepare_data():
 
 
 def main():
-    prepare_data()
+    prepare_data(use_cached=True)
 
 
 if __name__ == '__main__':
