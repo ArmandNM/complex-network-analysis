@@ -1,42 +1,56 @@
 import wget
-import pathlib
 import os, shutil, subprocess
 
+from graph import Graph, EdgeType
 
-def prepare_data(use_cached=False):
-    DOWNLOAD_PATH = './data'
 
-    if not use_cached:
-        shutil.rmtree(DOWNLOAD_PATH)
-    elif os.path.exists(DOWNLOAD_PATH):
-        return
+DATASETS_PATH = './data'
+DATASETS = [
+    {
+        'name': 'fb_graph',
+        'url': 'https://snap.stanford.edu/data/facebook_combined.txt.gz',
+        'edge_type': EdgeType.UNDIRECTED,
+        'header_size': 0,
+    },
+    {
+        'name': 'collaboration_network',
+        'url': 'https://snap.stanford.edu/data/ca-GrQc.txt.gz',
+        'edge_type': EdgeType.UNDIRECTED,
+        'header_size': 4,
+    }
+]
 
-    if not os.path.exists(DOWNLOAD_PATH):
-        os.makedirs(DOWNLOAD_PATH)
 
-    urls = [
-        'https://snap.stanford.edu/data/facebook.tar.gz',
-        'https://snap.stanford.edu/data/facebook_combined.txt.gz',
-        'https://snap.stanford.edu/data/ca-GrQc.txt.gz'
-    ]
+def prepare_data():
+    graphs = {}
 
-    # Download datasets
-    filenames = []
-    for url in urls:
-        filename = wget.download(url, DOWNLOAD_PATH)
-        filenames.append(filename)
+    # Clean data directoroy
+    shutil.rmtree(DATASETS_PATH)
 
-    # Extract archives
-    for filename in filenames:
-        extension = ''.join(pathlib.Path(filename).suffixes)
-        if extension == '.tar.gz':
-            subprocess.call(['tar', '-xf', filename, '-C', DOWNLOAD_PATH])
-        else:  # .gz
-            subprocess.call(['gzip', '-d', filename])
+    if not os.path.exists(DATASETS_PATH):
+        os.makedirs(DATASETS_PATH)
+
+    for ds in DATASETS:
+        # Download dataset
+        filename, extension = os.path.splitext(wget.download(ds['url'], DATASETS_PATH))
+
+        # Extract archive
+        assert extension == '.gz'
+        subprocess.call(['gzip', '-d', filename])
+
+        # Create graph
+        graph = Graph.create_from_edge_list(file_path=filename,
+                                            header_size=ds['header_size'],
+                                            edge_type=ds['edge_type'])
+
+        graphs[ds['name']] = graph
+
+    return graphs
 
 
 def main():
-    prepare_data(use_cached=True)
+    graphs = prepare_data()
+    print(graphs.keys())
 
 
 if __name__ == '__main__':
