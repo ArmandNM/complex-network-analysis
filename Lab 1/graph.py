@@ -9,12 +9,14 @@ class EdgeType(Enum):
 
 
 class Graph:
-    def __init__(self):
+    def __init__(self, edge_type):
         self.adjacency_list = {}
+        self.nodes = set()
+        self.edge_type = edge_type
 
     @classmethod
     def create_from_edge_list(cls, file_path, header_size, edge_type=EdgeType.UNDIRECTED):
-        graph = cls()
+        graph = cls(edge_type)  # Construct null graph of given type
 
         with open(file_path, 'r') as edges_file:
             # Skip header lines
@@ -31,14 +33,33 @@ class Graph:
 
         # Construct adjacency list
         for src, dest in edges:
-            if src not in graph.adjacency_list:
-                graph.adjacency_list[src] = []
+            # Update nodes set
+            graph.add_node(src)
+            graph.add_node(dest)
+
+            # Add new neighbour
             graph[src].append(dest)
 
         return graph
 
-    def __getitem__(self, node_id):
-        return self.get_neighbours(node_id)
+    def __getitem__(self, node):
+        return self.get_neighbours(node)
 
-    def get_neighbours(self, node_id):
-        return self.adjacency_list.get(node_id, [])
+    def get_neighbours(self, node):
+        assert node in self.adjacency_list
+        return self.adjacency_list.get(node, [])
+
+    def add_node(self, node):
+        self.nodes.add(node)
+        if node not in self.adjacency_list:
+            self.adjacency_list[node] = []
+
+    def add_edge(self, src, dest):
+        # Some safety checks
+        assert src in self.adjacency_list
+        assert src in self.nodes
+        assert dest in self.nodes
+
+        self.get_neighbours(src).append(dest)
+        if self.edge_type == EdgeType.UNDIRECTED:
+            self.get_neighbours(dest).append(src)
