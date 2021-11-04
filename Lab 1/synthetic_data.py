@@ -1,6 +1,8 @@
 import numpy as np
 import pprint
 
+from numpy.random.mtrand import randint
+
 from graph import Graph, EdgeType
 
 
@@ -79,8 +81,16 @@ class SyntheticGraphGenerator:
         return graph
 
     @staticmethod
-    def create_tree_graph():
-        pass
+    def create_tree_graph(num_nodes):
+        graph = Graph(edge_type=EdgeType.UNDIRECTED)
+        graph.add_node(0)  # Root node
+        for i in range(1, num_nodes):
+            graph.add_node(i)
+            # Chooose parent at random amongst the i-1 nodes already introduced
+            parent = np.random.randint(0, i)
+            graph.add_edge(i, parent)
+
+        return graph
 
     @staticmethod
     def create_split_graph():
@@ -101,6 +111,10 @@ def main():
     print('Kleinberg graph:')
     kleinberg_graph = SyntheticGraphGenerator.create_kleinberg_graph(n=5, m=7)
     pp.pprint(kleinberg_graph.adjacency_list)
+
+    print('Tree graph:')
+    tree_graph = SyntheticGraphGenerator.create_tree_graph(num_nodes=10)
+    pp.pprint(tree_graph.adjacency_list)
 
 
 if __name__ == '__main__':
