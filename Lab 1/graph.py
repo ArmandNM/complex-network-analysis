@@ -55,11 +55,14 @@ class Graph:
             self.adjacency_list[node] = []
 
     def add_edge(self, src, dest):
+        self.add_oriented_edge(src, dest)
+        if self.edge_type == EdgeType.UNDIRECTED:
+            self.add_oriented_edge(dest, src)
+
+    def add_oriented_edge(self, src, dest):
         # Some safety checks
         assert src in self.adjacency_list
         assert src in self.nodes
         assert dest in self.nodes
 
         self.get_neighbours(src).append(dest)
-        if self.edge_type == EdgeType.UNDIRECTED:
-            self.get_neighbours(dest).append(src)
