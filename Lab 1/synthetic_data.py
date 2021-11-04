@@ -1,4 +1,5 @@
 import numpy as np
+import pprint
 
 from graph import Graph, EdgeType
 
@@ -55,8 +56,27 @@ class SyntheticGraphGenerator:
         return graph
 
     @staticmethod
-    def create_kleinberg_graph():
-        pass
+    def create_kleinberg_graph(n, m, clustering_exponent=2):
+        # Start from the grid graph
+        graph = SyntheticGraphGenerator.create_grid_graph(n, m)
+
+        all_nodes = []
+        for i in range(n):
+            for j in range(m):
+                all_nodes.append([i, j, f'{i}_{j}'])
+
+        for it, (src_i, src_j, src) in enumerate(all_nodes):
+            for (dest_i, dest_j, dest) in all_nodes[it + 1:]:
+                # Compute edge probability for `small world` effect
+                dist = np.abs(src_i - dest_i) + 1 + np.abs(src_j - dest_j) + 1
+                prob = 1 / dist ** clustering_exponent
+
+                # Add edge with probability
+                rnd = np.random.rand()
+                if rnd <= prob:
+                    graph.add_edge(src, dest)
+
+        return graph
 
     @staticmethod
     def create_tree_graph():
@@ -68,10 +88,19 @@ class SyntheticGraphGenerator:
 
 
 def main():
+    pp = pprint.PrettyPrinter(indent=4)
+
+    print('Random graph:')
     random_graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=10, edge_prob=0.5)
+    pp.pprint(random_graph.adjacency_list)
+
+    print('Grid graph:')
     grid_graph = SyntheticGraphGenerator.create_grid_graph(n=5, m=7)
-    print(random_graph.adjacency_list)
-    print(grid_graph.adjacency_list)
+    pp.pprint(grid_graph.adjacency_list)
+
+    print('Kleinberg graph:')
+    kleinberg_graph = SyntheticGraphGenerator.create_kleinberg_graph(n=5, m=7)
+    pp.pprint(kleinberg_graph.adjacency_list)
 
 
 if __name__ == '__main__':
