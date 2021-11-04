@@ -93,8 +93,35 @@ class SyntheticGraphGenerator:
         return graph
 
     @staticmethod
-    def create_split_graph():
-        pass
+    def create_split_graph(clique_size, stable_set_size, prob=0.3):
+        graph = Graph(edge_type=EdgeType.UNDIRECTED)
+
+        # Create clique
+        clique_nodes = []
+        for i in range(clique_size):
+            node = f'clq_#{i}'
+            graph.add_node(node)
+            clique_nodes.append(node)
+
+            # Add edges to all previous nodes
+            for neigh in clique_nodes[:-1]:
+                graph.add_edge(node, neigh)
+
+        # Create stable set
+        stable_set_nodes = []
+        for i in range(stable_set_size):
+            node = f'ss_#{i}'
+            graph.add_node(node)
+            stable_set_nodes.append(node)
+
+        # Add edges between clique and stable set
+        for clq_node in clique_nodes:
+            for ss_node in stable_set_nodes:
+                rnd = np.random.rand()
+                if rnd <= prob:
+                    graph.add_edge(clq_node, ss_node)
+
+        return graph
 
 
 def main():
@@ -115,6 +142,10 @@ def main():
     print('Tree graph:')
     tree_graph = SyntheticGraphGenerator.create_tree_graph(num_nodes=10)
     pp.pprint(tree_graph.adjacency_list)
+
+    print('Split graph:')
+    split_graph = SyntheticGraphGenerator.create_split_graph(clique_size=5, stable_set_size=5)
+    pp.pprint(split_graph.adjacency_list)
 
 
 if __name__ == '__main__':
