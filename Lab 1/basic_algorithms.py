@@ -2,6 +2,7 @@ import pprint
 
 from queue import Queue
 
+from graph import EdgeType
 from synthetic_data import SyntheticGraphGenerator
 
 
@@ -56,7 +57,26 @@ def get_connected_components(graph):
 
 
 def compute_degree_sequence(graph):
-    pass
+    in_degree = {}
+    out_degree = {}
+
+    for node in graph.nodes:
+        in_degree[node] = 0
+        out_degree[node] = 0
+
+    for node in graph.nodes:
+        for neigh in graph.get_neighbours(node):
+            in_degree[neigh] += 1
+            out_degree[node] += 1
+
+    degree = {}
+    for node in graph.nodes:
+        if graph.edge_type == EdgeType.UNDIRECTED:
+            degree[node] = out_degree[node]  # same as in_degree
+        elif graph.edge_type == EdgeType.DIRECTED:
+            degree[node] = (in_degree[node], out_degree[node])
+
+    return degree
 
 
 def compute_diameter(graph):
@@ -71,6 +91,7 @@ def main():
     pp = pprint.PrettyPrinter(indent=4)
 
     random_graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=10, edge_prob=0.1)
+    print('Random graph:')
     pp.pprint(random_graph.adjacency_list)
 
     _, out = depth_first_search(random_graph, next(iter(random_graph.nodes)))
@@ -82,6 +103,10 @@ def main():
     cc = get_connected_components(random_graph)
     print('Connected components:')
     pp.pprint(cc)
+
+    degree_sequence = compute_degree_sequence(random_graph)
+    print('Degree sequence:')
+    pp.pprint(degree_sequence)
 
 
 if __name__ == '__main__':
