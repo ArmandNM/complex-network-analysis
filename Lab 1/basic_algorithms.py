@@ -14,8 +14,8 @@ def depth_first_search(graph, starting_node):
             if neigh not in visited:
                 _dfs(neigh, graph, visited, output)
 
-    visited = set()  # no nodes yet visited
-    output = []  # order of visiting nodes
+    visited = set()  # No nodes yet visited
+    output = []  # Order of visiting nodes
 
     _dfs(starting_node, graph, visited, output)
 
@@ -23,8 +23,8 @@ def depth_first_search(graph, starting_node):
 
 
 def breadth_first_search(graph, starting_node):
-    visited = set()  # no nodes yet visited
-    output = []  # order of visiting nodes
+    visited = set()  # No nodes yet visited
+    output = []  # Order of visiting nodes
     q = Queue()
 
     q.put(starting_node)
@@ -43,7 +43,16 @@ def breadth_first_search(graph, starting_node):
 
 
 def get_connected_components(graph):
-    pass
+    components = []
+    visited = set()
+
+    for node in graph.nodes:
+        if node not in visited:
+            component, _ = depth_first_search(graph, node)
+            components.append(component)
+            visited.update(component)
+
+    return components
 
 
 def compute_degree_sequence(graph):
@@ -61,14 +70,18 @@ def compute_girth(graph):
 def main():
     pp = pprint.PrettyPrinter(indent=4)
 
-    random_graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=5, edge_prob=0.5)
+    random_graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=10, edge_prob=0.1)
     pp.pprint(random_graph.adjacency_list)
 
     _, out = depth_first_search(random_graph, next(iter(random_graph.nodes)))
-    print(out)
+    print('DFS:', out)
 
     _, out = breadth_first_search(random_graph, next(iter(random_graph.nodes)))
-    print(out)
+    print('BFS:', out)
+
+    cc = get_connected_components(random_graph)
+    print('Connected components:')
+    pp.pprint(cc)
 
 
 if __name__ == '__main__':
