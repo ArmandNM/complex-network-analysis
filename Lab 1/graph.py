@@ -9,7 +9,7 @@ class EdgeType(Enum):
 
 
 class Graph:
-    def __init__(self, edge_type):
+    def __init__(self, edge_type=EdgeType.UNDIRECTED):
         self.adjacency_list = {}
         self.nodes = set()
         self.edge_type = edge_type

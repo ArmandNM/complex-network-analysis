@@ -1,8 +1,6 @@
 import numpy as np
 import pprint
 
-from numpy.random.mtrand import randint
-
 from graph import Graph, EdgeType
 
 
