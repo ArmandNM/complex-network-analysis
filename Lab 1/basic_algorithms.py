@@ -1,4 +1,5 @@
 import pprint
+import numpy as np
 
 from queue import Queue
 
@@ -80,7 +81,21 @@ def compute_degree_sequence(graph):
 
 
 def compute_diameter(graph):
-    pass
+    # Run BFS from arbitrary node
+    _, out = breadth_first_search(graph, next(iter(graph.nodes)))
+
+    # Check if graph is connected
+    if len(out) < len(graph.nodes):
+        return np.inf, None, None
+
+    # Get farthest node from first traversal
+    src, _ = max(out, key=lambda o: o[1])
+
+    # Get farthest distance from second traversal
+    _, out = breadth_first_search(graph, src)
+    dest, diameter = max(out, key=lambda o: o[1])
+
+    return diameter, src, dest
 
 
 def compute_girth(graph):
@@ -90,7 +105,7 @@ def compute_girth(graph):
 def main():
     pp = pprint.PrettyPrinter(indent=4)
 
-    random_graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=5, edge_prob=0.3)
+    random_graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=5, edge_prob=0.5)
     print('Random graph:')
     pp.pprint(random_graph.adjacency_list)
 
@@ -107,6 +122,9 @@ def main():
     degree_sequence = compute_degree_sequence(random_graph)
     print('Degree sequence:')
     pp.pprint(degree_sequence)
+
+    diameter, src, dest = compute_diameter(random_graph)
+    print(f'Diameter: {diameter} between nodes {src} and {dest}.')
 
 
 if __name__ == '__main__':
