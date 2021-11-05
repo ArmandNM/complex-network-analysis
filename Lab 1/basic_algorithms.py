@@ -28,17 +28,17 @@ def breadth_first_search(graph, starting_node):
     output = []  # Order of visiting nodes
     q = Queue()
 
-    q.put(starting_node)
+    q.put([starting_node, 0])  # [node, distance]
     visited.add(starting_node)
 
     while not q.empty():
-        node = q.get()
-        output.append(node)
+        node, distance = q.get()
+        output.append([node, distance])
 
         for neigh in graph.get_neighbours(node):
             if neigh not in visited:
                 visited.add(neigh)
-                q.put(neigh)
+                q.put([neigh, distance + 1])
 
     return visited, output
 
@@ -90,7 +90,7 @@ def compute_girth(graph):
 def main():
     pp = pprint.PrettyPrinter(indent=4)
 
-    random_graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=10, edge_prob=0.1)
+    random_graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=5, edge_prob=0.3)
     print('Random graph:')
     pp.pprint(random_graph.adjacency_list)
 
