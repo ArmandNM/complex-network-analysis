@@ -3,7 +3,7 @@ import numpy as np
 
 from queue import Queue
 
-from graph import EdgeType
+from graph import EdgeType, Graph
 from synthetic_data import SyntheticGraphGenerator
 
 
@@ -99,13 +99,53 @@ def compute_diameter(graph):
 
 
 def compute_girth(graph):
-    pass
+    def _bfs(starting_node, graph):
+        shortest_cycle = np.inf  # + [optional] tail
+
+        visited = set()  # No nodes yet visited
+        node_dist = {}
+        q = Queue()
+
+        q.put([starting_node, 0])  # [node, distance]
+        node_dist[starting_node] = 0
+        visited.add(starting_node)
+
+        while not q.empty():
+            node, distance = q.get()
+
+            for neigh in graph.get_neighbours(node):
+                if neigh in visited:
+                    neigh_dist = node_dist[neigh]
+                    if neigh_dist < distance:
+                        continue  # era ta-su mă
+
+                    if neigh_dist == distance:
+                        shortest_cycle = 2 * neigh_dist + 1
+                    elif neigh_dist == distance + 1:
+                        shortest_cycle = 2 * neigh_dist
+
+                    return shortest_cycle
+
+                if neigh not in visited:
+                    visited.add(neigh)
+                    node_dist[neigh] = distance + 1
+                    q.put([neigh, distance + 1])
+
+        return shortest_cycle
+
+    girth = np.inf
+
+    for node in graph.nodes:
+        shortest_cycle = _bfs(node, graph)
+        girth = min(girth, shortest_cycle)
+
+    return girth
 
 
 def main():
     pp = pprint.PrettyPrinter(indent=4)
 
-    random_graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=5, edge_prob=0.5)
+    random_graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=10, edge_prob=0.1)
     print('Random graph:')
     pp.pprint(random_graph.adjacency_list)
 
@@ -125,6 +165,43 @@ def main():
 
     diameter, src, dest = compute_diameter(random_graph)
     print(f'Diameter: {diameter} between nodes {src} and {dest}.')
+
+    girth = compute_girth(random_graph)
+    print(f'Girth random graph: {girth}.')
+    custom_graph = Graph()
+    custom_graph.add_node(1)
+    custom_graph.add_node(2)
+    custom_graph.add_node(3)
+    custom_graph.add_node(4)
+    custom_graph.add_node(5)
+    custom_graph.add_edge(1, 2)
+    custom_graph.add_edge(2, 3)
+    custom_graph.add_edge(3, 4)
+    custom_graph.add_edge(4, 5)
+    custom_graph.add_edge(5, 1)
+    girth = compute_girth(custom_graph)
+    print(f'Girth custom graph: {girth}.')
+
+    custom_graph2 = Graph()
+    custom_graph2.nodes = set(range(10))
+    custom_graph2.adjacency_list = {
+        0: [1, 7],
+        1: [0, 2, 3, 4, 5, 6, 8, 9],
+        2: [1, 3, 4, 5, 6, 8, 9],
+        3: [1, 2, 4, 7, 9],
+        4: [1, 2, 3, 5, 6, 9],
+        5: [1, 2, 4, 6, 8, 9],
+        6: [1, 2, 4, 5, 7],
+        7: [0, 3, 6, 9],
+        8: [1, 2, 5],
+        9: [1, 2, 3, 4, 5, 7]
+    }
+    girth = compute_girth(custom_graph2)
+    print(f'Girth custom graph2: {girth}.')
+
+    grid_graph = SyntheticGraphGenerator.create_grid_graph(3, 4)
+    girth = compute_girth(grid_graph)
+    print(f'Girth grid graph: {girth}.')
 
 
 if __name__ == '__main__':
