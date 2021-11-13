@@ -1,7 +1,9 @@
+import numpy as np
+import random
 import pprint
 
 from synthetic_data import SyntheticGraphGenerator
-from basic_algorithms import compute_degree_sequence
+from basic_algorithms import compute_degree_sequence, breadth_first_search
 
 
 def count_triangles(graph):
@@ -52,16 +54,39 @@ def clustering_coefficients(graph):
     return coeff
 
 
+def compute_average_distance(graph, num_samples=1000):
+    distances = []
+
+    for _ in range(num_samples):
+        src = random.choice(list(graph.nodes))
+        dest = random.choice(list(graph.nodes))
+
+        if src == dest:
+            continue
+
+        _, out = breadth_first_search(graph, src)
+
+        # Check if src and dest are connected
+        res = list(filter(lambda o: o[0] == dest, out))
+        if len(res) > 0:
+            distances.append(res[0][1])
+
+    return np.array(distances).mean()
+
+
 def main():
     pp = pprint.PrettyPrinter(indent=4)
 
-    graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=5, edge_prob=0.5)
-    pp.pprint(graph.adjacency_list)
+    graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=5000, edge_prob=0.01)
+    # pp.pprint(graph.adjacency_list)
     print(f'Random graph: num_traingles = {count_triangles(graph)}')
 
     coeff = clustering_coefficients(graph)
     print('Random graph: clustering coefficients')
     pp.pprint(coeff)
+
+    avg_dist = compute_average_distance(graph)
+    print(f'Random graph: average distance = {avg_dist}')
 
 
 if __name__ == '__main__':
