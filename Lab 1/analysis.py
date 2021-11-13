@@ -1,14 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-print(sys.getrecursionlimit())
-sys.setrecursionlimit(11000)
-print(sys.getrecursionlimit())
 
-from matplotlib.ticker import MaxNLocator
+# from matplotlib.ticker import MaxNLocator
 
 from synthetic_data import SyntheticGraphGenerator
 from basic_algorithms import get_connected_components, compute_diameter, compute_girth
+
+print(sys.getrecursionlimit())
+sys.setrecursionlimit(11000)
+print(sys.getrecursionlimit())
 
 
 def distribution_of_connected_components(graph):
