@@ -1,5 +1,6 @@
 import pprint
 import numpy as np
+import random
 
 from queue import Queue
 
@@ -80,7 +81,14 @@ def compute_degree_sequence(graph):
     return degree
 
 
-def compute_diameter(graph):
+def compute_diameter(graph, start_node='first'):  # start_node = 'first' or 'random'
+    assert start_node in ['first', 'random']
+
+    if start_node == 'first':
+        start_node = next(iter(graph.nodes))
+    elif start_node == 'random':
+        start_node = random.choice(list(graph.nodes))
+
     # Run BFS from arbitrary node
     _, out = breadth_first_search(graph, next(iter(graph.nodes)))
 
