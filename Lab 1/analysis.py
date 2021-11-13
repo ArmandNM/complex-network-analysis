@@ -8,7 +8,7 @@ print(sys.getrecursionlimit())
 from matplotlib.ticker import MaxNLocator
 
 from synthetic_data import SyntheticGraphGenerator
-from basic_algorithms import get_connected_components
+from basic_algorithms import get_connected_components, compute_diameter
 
 
 def distribution_of_connected_components(graph):
@@ -55,9 +55,32 @@ def distribution_of_connected_components(graph):
     plt.show()
 
 
+def diameter_classification(graph, num_repeats=20):
+    # Use 2 DFS method multiple times to estimate graph diameter
+    diameters = []
+    for _ in range(num_repeats):
+        diameter, _, _ = compute_diameter(graph, start_node='random')
+        diameters.append(diameter)
+
+    diameter = np.array(diameters).mean()
+
+    ratio = diameter / np.log(len(graph.nodes))
+
+    # Classify based on diameter / log(n) ratio
+    if ratio <= 1:
+        return 0
+    elif 1 < ratio <= 10:
+        return 1
+    elif ratio > 10:
+        return 2
+
+
 def main():
     graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=100, edge_prob=0.1)
-    distribution_of_connected_components(graph)
+    print(f'Random graph: diameter type #{diameter_classification(graph)}.')
+
+    graph = SyntheticGraphGenerator.create_grid_graph(n=10, m=21)
+    print(f'Grid graph: diameter type #{diameter_classification(graph)}.')
 
 
 if __name__ == '__main__':
