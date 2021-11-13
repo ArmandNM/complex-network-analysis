@@ -5,10 +5,11 @@ from basic_algorithms import compute_degree_sequence
 
 
 def count_triangles(graph):
-    num_triangles = 0
+    num_triangles = {}
 
     # Run a depth 2 DFS from each node
     for start_node in graph.nodes:
+        num_triangles[start_node] = 0
         for neigh1 in graph.get_neighbours(start_node):
             for neigh2 in graph.get_neighbours(neigh1):
                 # Don't return to parent
@@ -17,10 +18,17 @@ def count_triangles(graph):
                 for neigh3 in graph.get_neighbours(neigh2):
                     # If returned to start_node, we found a triangle
                     if neigh3 == start_node:
-                        num_triangles += 1
+                        num_triangles[start_node] += 1
 
-    # Remove counting redundancy
-    return num_triangles // 6
+        # Each triangle was counted twice for start_node
+        num_triangles[start_node] = num_triangles[start_node] // 2
+
+    total = 0
+    for node in num_triangles.keys():
+        total += num_triangles[node]
+
+    # Each triangle was counted once for every of its vertices
+    return total // 3, num_triangles
 
 
 def clustering_coefficients(graph):
@@ -29,29 +37,17 @@ def clustering_coefficients(graph):
     # Compute the degree sequence
     degree = compute_degree_sequence(graph)
 
-    # Run a depth 2 DFS from each node
-    for start_node in graph.nodes:
-        num_triangles = 0
-        for neigh1 in graph.get_neighbours(start_node):
-            for neigh2 in graph.get_neighbours(neigh1):
-                # Don't return to parent
-                if neigh2 == start_node:
-                    continue
-                for neigh3 in graph.get_neighbours(neigh2):
-                    # If returned to start_node, we found a triangle
-                    if neigh3 == start_node:
-                        num_triangles += 1
+    # Get number of triangles foro each vertex
+    _, num_triangles = count_triangles(graph)
 
-        # Each triangle was counted twice
-        num_triangles = num_triangles // 2
-
+    for node in graph.nodes:
         # Compute the theoretical maximum possible number of triangles
-        max_triangles = degree[start_node] * (degree[start_node] - 1) / 2
+        max_triangles = degree[node] * (degree[node] - 1) / 2
 
         if max_triangles > 0:
-            coeff[start_node] = num_triangles / max_triangles
+            coeff[node] = num_triangles[node] / max_triangles
         else:
-            coeff[start_node] = 0
+            coeff[node] = 0
 
     return coeff
 
