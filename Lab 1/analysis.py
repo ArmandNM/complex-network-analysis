@@ -1,9 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import pandas as pd
 import sys
 
-# from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import MaxNLocator
 
+from main import prepare_data
 from synthetic_data import SyntheticGraphGenerator
 from basic_algorithms import get_connected_components, compute_diameter, compute_girth
 
@@ -12,54 +15,62 @@ sys.setrecursionlimit(11000)
 print(sys.getrecursionlimit())
 
 
-def distribution_of_connected_components(graph):
-    cc = get_connected_components(graph)
-    cc_sizes = list(map(lambda comp: len(comp), cc))
-    print(cc_sizes)
-
-    # fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(7.5, 5.5))
-    # fig, ax = plt.subplots(nrows=1, ncols=1)
-    # ax.locator_params(axis='both', integer=True)
-    # ax.ticklabel_format(useOffset=False)
-    # ax.set_ylim(xmin=0)
-    # ax.set_xlim(xmin=0)
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.plot(cc_sizes, cc_sizes)
-    # ax.set_aspect('auto')
-    # ax.set_xbound(lower=-100, upper=1100)
-    # ax.ticklabel_format(style='plain', useOffset=False, axis='both')
-    # ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    # ax.ticklabel_format(style='plain')
-
-    plt.savefig('tests.png')
-
-    # print(cc_sizes)
-    # bins = np.linspace(start=0, stop=max(cc_sizes)+1000, num=10)
-    # ax.set_xticks(bins)
-
-    # plt.hist(x=cc_sizes, bins=100)
-    # plt.autoscale()
-
-    # bins = list(range(0, int(max(cc_sizes) / 100)))
-
-    # bins = np.arange(0, max(cc_sizes) + 1.5) + 0.5
-    # plt.hist(x=cc_sizes, color='blue', edgecolor='black', bins=bins)
-
-    # plt.xticks(range(10))
-    # plt.xticks(bins - 0.5)
-
-    # plt.title('Distribution of connected components')
-    # plt.xlabel('Size')
-    # plt.ylabel('# Components')
+def test_pandas():
+    df = pd.read_csv('./test_data/archive/condensed_day_report.csv')
+    df['day_of_week'].value_counts()[:20].plot(kind='bar')
     plt.show()
 
 
-def diameter_classification(graph, num_repeats=20):
+def distribution_of_connected_components(graph, name='fb'):
+    cc = get_connected_components(graph)
+
+    # Count connected components sizes
+    cc_sizes = list(map(lambda comp: len(comp), cc))
+
+    # Convert to dataframe for easier plotting
+    cc_sizes = pd.DataFrame(cc_sizes, columns=['size'])
+
+    # Aggregate by size
+    cc_sizes = cc_sizes['size'].value_counts().sort_index()
+
+    # Determine if graph has a `big component`
+    sizes = cc_sizes.iloc[-2:].index.tolist()
+    counts = cc_sizes.iloc[-2:].tolist()
+
+    big_component = False
+    if sizes[-1] > len(graph.nodes) / 100 and counts[-1] == 1:  # a single big component
+        big_component = True
+
+    if len(sizes) == 2 and sizes[-2] > np.log(len(graph.nodes)) / 2:
+        big_component = False
+
+    # Plot count for unique sizes
+    cc_sizes.plot(kind='bar', rot=0)
+
+    plt.title(f'Connected components size distribution\n{name}')
+    plt.gca().yaxis.set_major_locator(MaxNLocator(integer=True))
+
+    BIG = mpatches.Patch(color='green', label='Big component')
+    MEH = mpatches.Patch(color='red', label='Not big enough')
+    plt.legend(handles=[BIG, MEH])
+
+    if big_component:
+        plt.gca().get_xticklabels()[-1].set_color("green")
+    else:
+        plt.gca().get_xticklabels()[-1].set_color("red")
+
+    plt.xlabel('Size')
+    plt.ylabel('Count')
+
+    plt.tight_layout()
+
+    plt.show()
+
+
+def diameter_classification(graph, num_samples=20):
     # Use 2 DFS method multiple times to estimate graph diameter
     diameters = []
-    for _ in range(num_repeats):
+    for _ in range(num_samples):
         diameter, _, _ = compute_diameter(graph, start_node='random')
         diameters.append(diameter)
 
@@ -86,13 +97,19 @@ def girth_classification(graph):
 
 
 def main():
-    graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=100, edge_prob=0.01)
-    print(f'Random graph: diameter type #{diameter_classification(graph)}.')
-    print(f'Random graph: girth type #{girth_classification(graph)}.')
+    # test_pandas()
 
-    graph = SyntheticGraphGenerator.create_grid_graph(n=10, m=21)
-    print(f'Grid graph: diameter type #{diameter_classification(graph)}.')
-    print(f'Grid graph: girth type #{girth_classification(graph)}.')
+    real_graphs = prepare_data()
+    distribution_of_connected_components(real_graphs['fb_graph'], 'Facebook Graph')
+    distribution_of_connected_components(real_graphs['collaboration_network'], 'Collaboration Network')
+
+    # graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=100, edge_prob=0.01)
+    # print(f'Random graph: diameter type #{diameter_classification(graph)}.')
+    # print(f'Random graph: girth type #{girth_classification(graph)}.')
+
+    # graph = SyntheticGraphGenerator.create_grid_graph(n=10, m=21)
+    # print(f'Grid graph: diameter type #{diameter_classification(graph)}.')
+    # print(f'Grid graph: girth type #{girth_classification(graph)}.')
 
 
 if __name__ == '__main__':
