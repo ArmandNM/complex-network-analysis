@@ -2,26 +2,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import pandas as pd
+import powerlaw
 import sys
 
 from matplotlib.ticker import MaxNLocator
 
 from main import prepare_data
 from synthetic_data import SyntheticGraphGenerator
-from basic_algorithms import get_connected_components, compute_diameter, compute_girth
+from basic_algorithms import get_connected_components, compute_diameter, compute_girth, compute_degree_sequence
 
 print(sys.getrecursionlimit())
 sys.setrecursionlimit(11000)
 print(sys.getrecursionlimit())
 
 
-def test_pandas():
-    df = pd.read_csv('./test_data/archive/condensed_day_report.csv')
-    df['day_of_week'].value_counts()[:20].plot(kind='bar')
-    plt.show()
-
-
-def distribution_of_connected_components(graph, name='fb'):
+def distribution_of_connected_components(graph, name=''):
     cc = get_connected_components(graph)
 
     # Count connected components sizes
@@ -67,6 +62,39 @@ def distribution_of_connected_components(graph, name='fb'):
     plt.show()
 
 
+def scale_free_classification(graph, name):
+    degree = compute_degree_sequence(graph)
+    degree_sequence = sorted(degree.values())
+
+    results = powerlaw.Fit(degree_sequence, xmin=1, discrete=True)
+    R, p = results.distribution_compare('power_law', 'lognormal')
+    is_scale_free = R > 0
+
+    # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(5, 3))
+    fig = plt.figure(figsize=(17, 7), dpi=100)
+    ax = fig.add_subplot(111, frame_on=False)
+    ax.tick_params(labelcolor="none", bottom=False, left=False)
+
+    ax1 = fig.add_subplot(121)
+    ax2 = fig.add_subplot(122)
+
+    df = pd.DataFrame(degree_sequence, columns=['degree'])
+    degree_count = df['degree'].value_counts().sort_index()
+    degree_count.plot(kind='line', ax=ax1)
+    degree_count.plot(kind='line', loglog=True, ax=ax2)
+
+    ax.set_xlabel('Degree')
+    ax.set_ylabel('Count')
+
+    ax1.set_title('Linear scale')
+    ax2.set_title('Logarithmic scale')
+    ax.set_title(f'Scale-free analysis: Degree distribution\n{name}\n\n')
+
+    plt.show()
+
+    return is_scale_free
+
+
 def diameter_classification(graph, num_samples=20):
     # Use 2 DFS method multiple times to estimate graph diameter
     diameters = []
@@ -103,13 +131,16 @@ def main():
     distribution_of_connected_components(real_graphs['fb_graph'], 'Facebook Graph')
     distribution_of_connected_components(real_graphs['collaboration_network'], 'Collaboration Network')
 
-    # graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=100, edge_prob=0.01)
-    # print(f'Random graph: diameter type #{diameter_classification(graph)}.')
-    # print(f'Random graph: girth type #{girth_classification(graph)}.')
+    scale_free_classification(real_graphs['collaboration_network'], 'Collaboration Network')
+    scale_free_classification(real_graphs['fb_graph'], 'Facebook Graph')
 
-    # graph = SyntheticGraphGenerator.create_grid_graph(n=10, m=21)
-    # print(f'Grid graph: diameter type #{diameter_classification(graph)}.')
-    # print(f'Grid graph: girth type #{girth_classification(graph)}.')
+    graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=100, edge_prob=0.01)
+    print(f'Random graph: diameter type #{diameter_classification(graph)}.')
+    print(f'Random graph: girth type #{girth_classification(graph)}.')
+
+    graph = SyntheticGraphGenerator.create_grid_graph(n=10, m=21)
+    print(f'Grid graph: diameter type #{diameter_classification(graph)}.')
+    print(f'Grid graph: girth type #{girth_classification(graph)}.')
 
 
 if __name__ == '__main__':
