@@ -1,6 +1,10 @@
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 import random
 import pprint
+
+from matplotlib.ticker import MaxNLocator, AutoLocator
 
 from synthetic_data import SyntheticGraphGenerator
 from basic_algorithms import compute_degree_sequence, breadth_first_search
@@ -33,7 +37,7 @@ def count_triangles(graph):
     return total // 3, num_triangles
 
 
-def clustering_coefficients(graph):
+def clustering_coefficients(graph, name=''):
     coeff = {}
 
     # Compute the degree sequence
@@ -50,6 +54,23 @@ def clustering_coefficients(graph):
             coeff[node] = num_triangles[node] / max_triangles
         else:
             coeff[node] = 0
+
+    # Make bar plot for coefficient count
+    coeffs = list(coeff.values())
+    coeffs = list(map(lambda c: round(c, 2), coeffs))
+    coeffs = pd.DataFrame(coeffs, columns=['clustering_coefficient'])
+    coeffs = coeffs['clustering_coefficient'].value_counts().sort_index()
+    coeffs.plot(kind='bar', rot=45, width=1.3)
+
+    plt.title(f'Clustering coefficients distribution\n{name}')
+    # plt.gca().xaxis.set_major_locator(MaxNLocator(min(25, len(coeffs))))
+    plt.gca().yaxis.set_major_locator(MaxNLocator(integer=True))
+
+    plt.xlabel('Clustering coefficient')
+    plt.ylabel('Count')
+
+    plt.tight_layout()
+    plt.show()
 
     return coeff
 
@@ -71,15 +92,23 @@ def compute_average_distance(graph, num_samples=1000):
         if len(res) > 0:
             distances.append(res[0][1])
 
-    return np.array(distances).mean()
+    average_distance = np.array(distances).mean()
+    label = ''
+
+    if average_distance < np.log(np.log(len(graph.nodes))):
+        label = 'ultra small world'
+    elif average_distance < np.log(len(graph.nodes)):
+        label = 'small world'
+
+    return average_distance, label
 
 
 def main():
     pp = pprint.PrettyPrinter(indent=4)
 
-    graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=5000, edge_prob=0.01)
+    graph = SyntheticGraphGenerator.create_random_edge_graph(num_nodes=500, edge_prob=0.01)
     # pp.pprint(graph.adjacency_list)
-    print(f'Random graph: num_traingles = {count_triangles(graph)}')
+    # print(f'Random graph: num_traingles = {count_triangles(graph)}')
 
     coeff = clustering_coefficients(graph)
     print('Random graph: clustering coefficients')
