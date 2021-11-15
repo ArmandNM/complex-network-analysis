@@ -7,7 +7,7 @@ import sys
 
 from matplotlib.ticker import MaxNLocator
 
-from main import prepare_data
+from data import prepare_data
 from synthetic_data import SyntheticGraphGenerator
 from basic_algorithms import get_connected_components, compute_diameter, compute_girth, compute_degree_sequence
 
@@ -71,7 +71,7 @@ def scale_free_classification(graph, name):
     is_scale_free = R > 0
 
     # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(5, 3))
-    fig = plt.figure(figsize=(17, 7), dpi=100)
+    fig = plt.figure(figsize=(17, 6.5), dpi=100)
     ax = fig.add_subplot(111, frame_on=False)
     ax.tick_params(labelcolor="none", bottom=False, left=False)
 
@@ -92,7 +92,7 @@ def scale_free_classification(graph, name):
 
     plt.show()
 
-    return is_scale_free
+    return is_scale_free, results.power_law.alpha
 
 
 def diameter_classification(graph, num_samples=20):

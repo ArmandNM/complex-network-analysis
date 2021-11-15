@@ -1,4 +1,5 @@
 import pprint
+from matplotlib.pyplot import draw_if_interactive
 import numpy as np
 import random
 
